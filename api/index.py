@@ -17,7 +17,13 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+# Lazy initialization - client is created only when needed
+def get_openai_client():
+    """Get OpenAI client, creating it lazily when needed"""
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        return None
+    return OpenAI(api_key=api_key)
 
 class ChatRequest(BaseModel):
     message: str
@@ -26,20 +32,39 @@ class ChatRequest(BaseModel):
 def root():
     return {"status": "ok"}
 
+@app.get("/api/health")
+def health():
+    """Health check endpoint"""
+    api_key = os.getenv("OPENAI_API_KEY")
+    return {
+        "status": "ok",
+        "openai_configured": api_key is not None
+    }
+
 @app.post("/api/chat")
 def chat(request: ChatRequest):
-    if not os.getenv("OPENAI_API_KEY"):
-        raise HTTPException(status_code=500, detail="OPENAI_API_KEY not configured")
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise HTTPException(
+            status_code=500, 
+            detail="OPENAI_API_KEY not configured. Please set it in your Vercel environment variables."
+        )
     
     try:
+        client = get_openai_client()
+        if not client:
+            raise HTTPException(status_code=500, detail="Failed to initialize OpenAI client")
+        
         user_message = request.message
         response = client.chat.completions.create(
-            model="gpt-5",
+            model="gpt-4o-mini",  # Using a valid model name
             messages=[
                 {"role": "system", "content": "You are a supportive mental coach."},
                 {"role": "user", "content": user_message}
             ]
         )
         return {"reply": response.choices[0].message.content}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error calling OpenAI API: {str(e)}")

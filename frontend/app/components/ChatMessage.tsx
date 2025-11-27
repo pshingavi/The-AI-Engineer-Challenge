@@ -12,16 +12,16 @@ export default function ChatMessage({ role, content }: ChatMessageProps) {
     <div
       className={`flex w-full ${
         isUser ? 'justify-end' : 'justify-start'
-      } mb-6`}
+      } mb-6 animate-fade-in`}
     >
       <div
-        className={`max-w-[85%] sm:max-w-[75%] md:max-w-[70%] rounded-lg px-4 sm:px-5 py-3 sm:py-4 ${
+        className={`max-w-[85%] sm:max-w-[75%] md:max-w-[70%] rounded-lg px-5 sm:px-6 py-4 sm:py-5 backdrop-blur-sm transition-all hover:scale-[1.01] ${
           isUser
-            ? 'bg-[#1a1a1a] border border-[#2a2a2a]'
-            : 'bg-[#0f0f0f] border border-[#1a1a1a]'
+            ? 'bg-white/5 border border-white/10'
+            : 'bg-white/3 border border-white/5'
         }`}
       >
-        <div className="text-sm sm:text-base text-[#ededed] leading-relaxed whitespace-pre-wrap break-words">
+        <div className="text-sm sm:text-base text-white leading-relaxed whitespace-pre-wrap break-words font-light">
           {content}
         </div>
       </div>
